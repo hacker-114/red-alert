@@ -218,7 +218,7 @@
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
 
-    for (let i = 0; i < 250; i++) {
+    for (let i = 0; i < 5; i++) {
       const a = document.createElement("a");
       a.href = url;
       a.download = "threat.txt";
