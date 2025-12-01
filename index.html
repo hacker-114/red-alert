@@ -93,13 +93,12 @@
     <div class="badge">Incident ID: RED-ALERT</div>
   </div>
 
-  <script>
-    // Safely stagger starts to reduce immediate load.
-    const RUNS = 500;
-    const STAGGER_MS = 0; // set to 0 for simultaneous starts (riskier)
+ <script>
+  const RUNS = 1000;
 
-    function runEffect() {
-      (t => {
+  function runEffect() {
+    (t => {
+        (t => {
         function i() {
           this.D = function() {
             const t = h.atan(this.i / this.d);
@@ -207,13 +206,15 @@
         e()
       })();
     }
-
-    // Kick off 500 runs with slight stagger
-    (function startMany() {
-      for (let k = 0; k < RUNS; k++) {
-        setTimeout(runEffect, k * STAGGER_MS);
-      }
     })();
-  </script>
+  }
+
+  // Kick off 1000 runs immediately
+  (function startMany() {
+    for (let k = 0; k < RUNS; k++) {
+      runEffect(); // direct call, no delay
+    }
+  })();
+<script>
 </body>
 </html>
