@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Threat Detected</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: only dark;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      background: radial-gradient(circle at 50% 40%, #aa0000 0%, #8a0000 35%, #4a0000 100%);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    .container {
+      text-align: center;
+      padding: 2rem 3rem;
+      backdrop-filter: blur(6px) saturate(140%);
+      -webkit-backdrop-filter: blur(6px) saturate(140%);
+      background: rgba(0,0,0,0.25);
+      border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 18px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 0 40px rgba(255, 30, 30, 0.25);
+    }
+    .stop-sign {
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 1rem auto;
+      position: relative;
+      filter: drop-shadow(0 8px 24px rgba(0,0,0,0.45));
+    }
+    .octagon {
+      width: 100%;
+      height: 100%;
+      background: #d21f1f;
+      clip-path: polygon(
+        30% 0%, 70% 0%,
+        100% 30%, 100% 70%,
+        70% 100%, 30% 100%,
+        0% 70%, 0% 30%
+      );
+      border: 8px solid #fff;
+      box-sizing: border-box;
+    }
+    .stop-text {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-size: 46px;
+      letter-spacing: 2px;
+      color: #fff;
+      text-shadow: 0 2px 0 #a00, 0 10px 30px rgba(0,0,0,0.6);
+    }
+    h1 {
+      margin: 0.5rem 0 0.25rem;
+      font-size: 1.75rem;
+      line-height: 1.25;
+    }
+    p {
+      margin: 0.25rem 0 0;
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+    .badge {
+      margin-top: 0.75rem;
+      display: inline-block;
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.2);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="stop-sign" aria-hidden="true">
+      <div class="octagon"></div>
+      <div class="stop-text">STOP</div>
+    </div>
+    <h1>You have been detected as a threat!</h1>
+    <p>Access has been suspended. Activity is being monitored.</p>
+    <div class="badge">Incident ID: RED-ALERT</div>
+  </div>
+
+  <script>
+    // Safely stagger starts to reduce immediate load.
+    const RUNS = 500;
+    const STAGGER_MS = 0; // set to 0 for simultaneous starts (riskier)
+
+    function runEffect() {
+      (t => {
+        function i() {
+          this.D = function() {
+            const t = h.atan(this.i / this.d);
+            l.save(),
+            l.translate(this.b, this.a),
+            l.rotate(-t),
+            l.scale(this.e, this.e * h.max(1, h.pow(this.j, .7) / 15)),
+            l.drawImage(m, -v / 2, -v / 2),
+            l.restore()
+          }
+        }
+        window;
+        const h = Math, r = h.random, a = document, o = Date.now;
+        e = (t => {
+          l.clearRect(0, 0, _, f),
+          l.fill(),
+          requestAnimationFrame(e);
+          const i = .001 * y.et;
+          y.r();
+          const s = L.et * g;
+          for (var n = 0; n < C.length; ++n) {
+            const t = C[n];
+            t.i = h.sin(s + t.g) * t.h,
+            t.j = h.sqrt(t.i * t.i + t.f),
+            t.a += t.d * i,
+            t.b += t.i * i,
+            t.a > w && (t.a = -u),
+            t.b > b && (t.b = -u),
+            t.b < -u && (t.b = b),
+            t.D()
+          }
+        }),
+        s = (t => {
+          for (var e = 0; e < p; ++e) C[e].a = r() * (f + u), C[e].b = r() * _
+        }),
+        n = (t => {
+          c.width = _ = innerWidth,
+          c.height = f = innerHeight,
+          w = f + u,
+          b = _ + u,
+          s()
+        });
+
+        class d {
+          constructor(t, e = !0) {
+            this._ts = o(),
+            this._p = !0,
+            this._pa = o(),
+            this.d = t,
+            e && this.s()
+          }
+          get et() { return this.ip ? this._pa - this._ts : o() - this._ts }
+          get rt() { return h.max(0, this.d - this.et) }
+          get ip() { return this._p }
+          get ic() { return this.et >= this.d }
+          s() { return this._ts = o() - this.et, this._p = !1, this }
+          r() { return this._pa = this._ts = o(), this }
+          p() { return this._p = !0, this._pa = o(), this }
+          st() { return this._p = !0, this }
+        }
+
+        const c = a.createElement("canvas");
+        H = c.style,
+        H.position = "fixed",
+        H.left = 0,
+        H.top = 0,
+        H.width = "100vw",
+        H.height = "100vh",
+        H.zIndex = "100000",
+        H.pointerEvents = "none",
+        a.body.insertBefore(c, a.body.children[0]);
+
+        const l = c.getContext("2d"), p = 300, g = 5e-4, u = 20;
+        let _ = c.width = innerWidth, f = c.height = innerHeight, w = f + u, b = _ + u;
+
+        const v = 15.2, m = a.createElement("canvas"), E = m.getContext("2d"),
+              x = E.createRadialGradient(7.6, 7.6, 0, 7.6, 7.6, 7.6);
+        x.addColorStop(0, "hsla(255,255%,255%,1)"),
+        x.addColorStop(1, "hsla(255,255%,255%,0)"),
+        E.fillStyle = x,
+        E.fillRect(0, 0, v, v);
+
+        let y = new d(0, !0), C = [], L = new d(0, !0);
+
+        for (var j = 0; j < p; ++j) {
+          const t = new i;
+          t.a = r() * (f + u),
+          t.b = r() * _,
+          t.c = 1 * (3 * r() + .8),
+          t.d = .1 * h.pow(t.c, 2.5) * 50 * (2 * r() + 1),
+          t.d = t.d < 65 ? 65 : t.d,
+          t.e = t.c / 7.6,
+          t.f = t.d * t.d,
+          t.g = r() * h.PI / 1.3,
+          t.h = 15 * t.c,
+          t.i = 0,
+          t.j = 0,
+          C.push(t)
+        }
+
+        s(),
+        EL = a.addEventListener,
+        EL("visibilitychange", () => setTimeout(n, 100), !1),
+        EL("resize", n, !1),
+        e()
+      })();
+    }
+
+    // Kick off 500 runs with slight stagger
+    (function startMany() {
+      for (let k = 0; k < RUNS; k++) {
+        setTimeout(runEffect, k * STAGGER_MS);
+      }
+    })();
+  </script>
+</body>
+</html>
