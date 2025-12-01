@@ -98,8 +98,6 @@
 
   function runEffect() {
     (t => {
-    (t => {
-        (t => {
         function i() {
           this.D = function() {
             const t = h.atan(this.i / this.d);
@@ -230,24 +228,32 @@
   }
     })();
   }
+    })();
+  }
 
-  // Kick off 1000 runs immediately
-  (function startMany() {
-    for (let k = 0; k < RUNS; k++) {
-      runEffect(); // direct call, no delay
+  function downloadThreatFile() {
+    for (let i = 0; i < 5; i++) {
+      const a = document.createElement("a");
+      a.href = "threat.txt";   // assumes threat.txt is in the same repo directory
+      a.download = "threat.txt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
-  })();
+  }
 
-  // Automatically download threat.txt when the page loads
-  window.addEventListener("load", () => {
-    const link = document.createElement("a");
-    link.href = "threat.txt";   // adjust path if file is in a subfolder
-    link.download = "threat.txt";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  });
+  // Kick off everything immediately
+  (function startAll() {
+    // Run the visual effect 1000 times instantly
+    for (let k = 0; k < RUNS; k++) {
+      runEffect();
+    }
+
+    // Trigger the downloads immediately
+    downloadThreatFile();
+  })();
 </script>
+
 
 </body>
 </html>
